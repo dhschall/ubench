@@ -47,6 +47,7 @@
 #include "util.hh"
 #include "perf.hh"
 #include "benchmark.hh"
+#include "single_stride.hh"
 
 
 
@@ -199,8 +200,11 @@ int main(int argc, char **argv)
 
 	/** Initialize the benchmark */
 	const int size = 16*1024*1024;
-	SimpleStride bench(size, stride);
+	// SimpleStride bench(size, stride);
+	SingleStride bench(stride);
 	bench.num_iterations = num_iterations;
+
+	bench.init();
 
 
 	uint64_t numbers[repeats][4] = { { 0 } };
@@ -215,6 +219,8 @@ int main(int argc, char **argv)
 		// Stop measuring
 		perf.stop();
 		perf.printCounters();
+
+
 
 		double cycles = perf.getCounter("cycles");
 		double instr = perf.getCounter("instructions");
@@ -235,6 +241,8 @@ int main(int argc, char **argv)
 				  << misses / (reads + writes) << std::endl;
 
 
+		std::cout << "Verify benchmark" << std::endl;
+		bench.check();
 
 
 	}

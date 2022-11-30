@@ -4,15 +4,32 @@ CFLAGS := -Wall -g
 TARGET := bench
 
 # $(wildcard *.cpp /xxx/xxx/*.cpp): get all .cpp files from the current directory and dir "/xxx/xxx/"
-SRCS := $(wildcard *.cc)
-# $(patsubst %.cpp,%.o,$(SRCS)): substitute all ".cpp" file name strings to ".o" file name strings
-OBJS := $(patsubst %.cc,%.o,$(SRCS))
+CPPFILES := $(wildcard *.cc)
+SFILES := $(wildcard  *.S)
+OBJS := $(CPPFILES:.cc=.o) $(SFILES:.S=.o)
+
+
+CPPFILES := main.cc benchmark.cc
+# CCASMFILES := singel_stride.cc
+
+# OBJS := perf.o main.o benchmark.o single_stride.o
+
+
+
 
 
 $(TARGET): $(OBJS)
 	$(CC) -o $@ $^
-%.o: %.cpp
-	$(CC) $(CFLAGS) -c $<
+
+%.o : %.S
+		$(CC) -o $@ $< -c -g
+
+%.o : %.cc
+		$(CC) -o $@ $< -c -g
+
+
+# single_stride.o: single_stride.cc single_stride.S
+# 	$(CC) -o $@ $< -c -g
 
 
 all: $(TARGET)
