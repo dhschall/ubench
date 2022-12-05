@@ -48,6 +48,8 @@
 #include "perf.hh"
 #include "benchmark.hh"
 #include "single_stride.hh"
+#include "m5ops.hh"
+
 
 
 
@@ -80,20 +82,20 @@ const char *optstring_from_long_options(const struct option *opt)
 
 int main(int argc, char **argv)
 {
-	/* [1] Disable ASLR */
-	{
-		int persona = personality(0xffffffff);
-		if ((persona & ADDR_NO_RANDOMIZE) == 0) {
-			int r = personality(persona | ADDR_NO_RANDOMIZE);
-			if (r == -1) {
-				error(-1, errno, "personality()");
-			}
-			// re-run yourself
-			execvp(argv[0], argv);
-			perror("execvp()");
-			exit(-1);
-		}
-	}
+	// /* [1] Disable ASLR */
+	// {
+	// 	int persona = personality(0xffffffff);
+	// 	if ((persona & ADDR_NO_RANDOMIZE) == 0) {
+	// 		int r = personality(persona | ADDR_NO_RANDOMIZE);
+	// 		if (r == -1) {
+	// 			error(-1, errno, "personality()");
+	// 		}
+	// 		// re-run yourself
+	// 		execvp(argv[0], argv);
+	// 		perror("execvp()");
+	// 		exit(-1);
+	// 	}
+	// }
 
 
 	int cycle_count = 1000;
@@ -102,14 +104,14 @@ int main(int argc, char **argv)
 	int cpu_number = 0;
 	int stride = 64;
 	int num_iterations = 10;
+	bool use_m5ops = false;
+	bool use_perf = true;
 
 
 	/* Here is a problem. On aarch64 the timer is not precise
 	 * enough to catch very short loops. Lets run the thing N
 	 * times (10?) for small runs. */
 	int repeats = 1;
-
-	int use_perf = 0;
 	int raw_counter = 0;
 
 	static struct option long_options[] = {
@@ -120,6 +122,10 @@ int main(int argc, char **argv)
 		{ "stride", required_argument, 0, 's' },
 		{ "num_inter", required_argument, 0, 'n' },
 		{ "repeats", required_argument, 0, 'r' },
+		{ "m5ops", no_argument, 0, 'm' },
+		{ "no-perf", no_argument, 0, 'z' },
+
+
 		{ NULL, 0, 0, 0 }
 	};
 
@@ -159,9 +165,14 @@ int main(int argc, char **argv)
 		case 'p':
 			cpu_number = atoi(optarg);
 			break;
-		case 'a':
-			/* You're allowed to shoot yourself in a foot here. */
-			alignment = atoi(optarg);
+		// case 'a':
+		// 	alignment = atoi(optarg);
+		// 	break;
+		case 'm':
+			use_m5ops = true;
+			break;
+		case 'z':
+			use_perf = false;
 			break;
 		case 'r':
 			repeats = atoi(optarg);
@@ -171,6 +182,10 @@ int main(int argc, char **argv)
 
 	if (argv[optind]) {
 		error(-1, errno, "Not sure what you mean by %s", argv[optind]);
+	}
+
+	if (use_m5ops && use_perf) {
+		error(-1,  errno, "Cannot use perf and m5 at the same time");
 	}
 
 	/* [2] Setaffinity */
@@ -193,10 +208,22 @@ int main(int argc, char **argv)
     perf.registerCounter("L1D-misses", PERF_TYPE_HW_CACHE, PERF_COUNT_HW_CACHE_L1D|(PERF_COUNT_HW_CACHE_OP_READ<<8)|(PERF_COUNT_HW_CACHE_RESULT_MISS<<16));
     perf.registerCounter("L1D-reads", PERF_TYPE_HW_CACHE, PERF_COUNT_HW_CACHE_L1D|(PERF_COUNT_HW_CACHE_OP_READ<<8)|(PERF_COUNT_HW_CACHE_RESULT_ACCESS<<16));
     perf.registerCounter("L1D-writes", PERF_TYPE_HW_CACHE, PERF_COUNT_HW_CACHE_L1D|(PERF_COUNT_HW_CACHE_OP_WRITE<<8)|(PERF_COUNT_HW_CACHE_RESULT_ACCESS<<16));
+	perf.registerCounter("cs", PERF_TYPE_SOFTWARE, PERF_COUNT_SW_CONTEXT_SWITCHES);
+
+
 
     // perf.registerCounter("LLC-misses", PERF_TYPE_HARDWARE, PERF_COUNT_HW_CACHE_MISSES);
 
-	perf.init();
+	if (use_perf) {
+		perf.init();
+	}
+
+
+	M5Ops m5ops;
+
+	// if (use_m5ops) {
+	// 	m5ops.init();
+	// }
 
 	/** Initialize the benchmark */
 	const int size = 16*1024*1024;
@@ -211,13 +238,24 @@ int main(int argc, char **argv)
 	for (uint j = 0; j < repeats; j++) {
 
 		// Start measuring
-		perf.start();
+		if (use_perf) {
+			perf.start();
+		}
+		if (use_m5ops) {
+			m5ops.workBegin(j);
+		}
 
 		// perform benchmark
 		bench.exec();
 
 		// Stop measuring
-		perf.stop();
+		if (use_m5ops) {
+			m5ops.workEnd(j);
+		}
+		if (use_perf) {
+			perf.stop();
+		}
+
 		perf.printCounters();
 
 
@@ -227,6 +265,8 @@ int main(int argc, char **argv)
 		double misses = perf.getCounter("L1D-misses");
 		double reads = perf.getCounter("L1D-reads");
 		double writes = perf.getCounter("L1D-writes");
+		double cs = perf.getCounter("cs");
+
 
 		std::cout << std::setw(static_cast<int>(15))
 				  << "IPC: " <<  std::fixed << std::setprecision(2)
@@ -239,6 +279,10 @@ int main(int argc, char **argv)
 		std::cout << std::setw(static_cast<int>(15))
 				  << "Miss ratio: " <<  std::fixed << std::setprecision(2)
 				  << misses / (reads + writes) << std::endl;
+
+		std::cout << std::setw(static_cast<int>(15))
+				  << "Context Switches: " <<  std::fixed << std::setprecision(0)
+				  << cs << std::endl;
 
 
 		std::cout << "Verify benchmark" << std::endl;

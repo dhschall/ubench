@@ -102,12 +102,13 @@ void PerfEvent::start()
 		std::cerr << "Counters not initialized " << std::endl;
 	}
 
+	startTime = std::chrono::steady_clock::now();
 
 	asm volatile("" ::: "memory");
 	ioctl(events[0].fd, PERF_EVENT_IOC_RESET, PERF_IOC_FLAG_GROUP);
 	ioctl(events[0].fd, PERF_EVENT_IOC_ENABLE, PERF_IOC_FLAG_GROUP);
 	asm volatile("" ::: "memory");
-	startTime = std::chrono::steady_clock::now();
+
 }
 
 PerfEvent::~PerfEvent()
@@ -119,7 +120,7 @@ PerfEvent::~PerfEvent()
 
 void PerfEvent::stop()
 {
-	stopTime = std::chrono::steady_clock::now();
+
 	asm volatile("" ::: "memory");
 	ioctl(events[0].fd, PERF_EVENT_IOC_DISABLE, PERF_IOC_FLAG_GROUP);
 
@@ -131,6 +132,9 @@ void PerfEvent::stop()
 		//  ioctl(event.fd, PERF_EVENT_IOC_DISABLE, 0);
 		// std::cout << "Setup: " << event.name << " " << event.fd << std::endl;
 	}
+
+	stopTime = std::chrono::steady_clock::now();
+
 }
 
 double
