@@ -37,7 +37,7 @@ CPPFILES := main.cc benchmark.cc
 
 
 $(TARGET): $(OBJS)
-	$(CC) -g -no-pie $^ -o $@
+	$(CC) -g -no-pie -static $^ -o $@
 
 %.o : %.S
 		$(CC) -o $@ $< -c -g
