@@ -73,7 +73,7 @@ bool BranchSortedData::init()
 		A[c] = v;
 	}
 
-	// std::sort(A, A + array_size);
+	std::sort(A, A + array_size);
 
 	Benchmark::init();
   	return true;
@@ -94,6 +94,8 @@ bool BranchSortedData::init()
 // 	}
 // }
 
+
+
 void BranchSortedData::exec()
 {
 	// Call the assembly
@@ -101,25 +103,59 @@ void BranchSortedData::exec()
 
 	for (unsigned i = 0; i < LOOP; ++i)
 	{
+		for (unsigned c = 0; c < array_size; ++c)
+		{
+		if (A[c] >= 128)
+			res_val += A[c];
 
-		// for (unsigned c = 0; c < array_size; ++c)
-		// {
-		factorial(func2(10));
-		// }
+		if (A[c] >= 32)
+			res_val += A[c];
+
+		if (A[c] >= 4)
+			res_val -= A[c];
+
+		if (A[c] >= 3)
+			res_val *= A[c];
+
+		if (A[c] < 53)
+			res_val |= A[c];
+
+		if (A[c] < 9)
+			res_val |= A[c];
+
+		if (A[c] < 2)
+			res_val &= A[c];
+
+		if (A[c] < 1)
+			res_val ^= A[c];
+
+		if (A[c] > 0)
+			res_val += A[c];
+
+		}
 	}
 }
 
 
 
+// void BranchSortedData::exec()
+// {
+// 	// Call the assembly
+// 	// res_val =  singlestride(A, stride, num_iterations);
 
-int
-BranchSortedData::factorial(int n) {
-    if (n > 1) {
-        return n * factorial(n - 1);
-    } else {
-        return 1;
-    }
-}
+// 	for (unsigned i = 0; i < LOOP; ++i)
+// 	{
+
+// 		// for (unsigned c = 0; c < array_size; ++c)
+// 		// {
+// 		factorial(func2(10));
+// 		// }
+// 	}
+// }
+
+
+
+
 
 
 bool BranchSortedData::check()

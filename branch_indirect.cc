@@ -28,63 +28,107 @@
 
 
 
-#include "m5ops.hh"
+/** Simple stride benchmark
+ *
+ * Description:
+*/
 
-#include "m5lib/m5_mmap.h"
-#include "m5lib/m5ops.h"
+#include "branch_test.hh"
+#include "util.hh"
+
+// // This let the compiler know about the external assembly
+// extern "C" {
+// 	uint64_t singlestride(uint64_t* A, uint64_t stride, uint64_t num_iterations) __attribute__((sysv_abi));
+// }
 
 
-M5Ops::M5Ops()
-  : initialized(false)
+BranchIndirect::BranchIndirect(uint64_t array_size)
+	: Benchmark("Branch: sorted data"),
+    A(nullptr),
+    array_size(array_size),
+	num_iterations(1),
+	ref_val(0), res_val(0)
 {
 }
 
-M5Ops::~M5Ops()
+BranchIndirect::~BranchIndirect()
 {
-	unmap_m5_mem();
+	delete A;
 }
 
-void M5Ops::init()
+bool BranchIndirect::init()
 {
-	map_m5_mem();
-	initialized = true;
+  	if (array_size == 0) {
+		std::cerr << "Array of size 0 makes no sense!" << std::endl;
+	}
+
+	fatal_if(!isPowerOf2(array_size), "Must be power of two!\n");
+
+	A = new uint64_t[array_size];
+
+	// Here we initialize the memory.
+    for (unsigned c = 0; c < array_size; ++c) {
+		auto v = std::rand() % 16;
+		ref_val += v;
+		A[c] = v;
+	}
+
+	// std::sort(A, A + array_size);
+
+	Benchmark::init();
+  	return true;
 }
 
-void M5Ops::start()
+__attribute__((optimize("O0")))
+void BranchIndirect::exec()
 {
-	// if (!initialized) {
-	// 	std::cerr << "Counters not initialized " << std::endl;
-	// }
-	resetStats();
-}
+	// Call the assembly
+	// res_val =  singlestride(A, stride, num_iterations);
+
+	for (unsigned i = 0; i < LOOP; ++i)
+	{
+		for (unsigned c = 0; c < array_size; ++c)
+		{
+			switch (A[c])
+			{
+			case 0:
+				res_val += 4;
+				break;
+
+			case 2:
+				res_val += 5;
+				break;
+
+			case 5:
+				res_val += 3;
+				continue;
+				break;
+			}
 
 
-void M5Ops::stop()
-{
-	dumpStats();
+			switch (A[c])
+			{
+			case 1:
+			case 9:
+				res_val += 4;
+				break;
+
+			case 6:
+				res_val += 5;
+				break;
+
+			case 5:
+				res_val += 3;
+				break;
+				res_val += 4;
+				break;
+
+			case 12:
+				res_val += 5;
+				continue;
+				break;
+			}
+		}
+	}
 }
 
-void M5Ops::dumpStats()
-{
-	m5_dump_stats(0,0);
-}
-
-void M5Ops::resetStats()
-{
-	m5_reset_stats(0,0);
-}
-
-void M5Ops::workBegin(uint id)
-{
-	m5_work_begin(id,0);
-}
-
-void M5Ops::workEnd(uint id)
-{
-	m5_work_end(id,0);
-}
-
-void M5Ops::checkpoint()
-{
-	m5_checkpoint(0,0);
-}

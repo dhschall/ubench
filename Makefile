@@ -1,9 +1,17 @@
 
+ARCH ?= $(shell uname -m)
+
+
 CC := g++
 CFLAGS := -Wall -g -fPIC
 TARGET := bench
 
 
+ifeq ($(ARCH), arm64)
+ifeq ($(shell uname -i),x86_64)
+CC = aarch64-linux-gnu-g++
+endif
+endif
 
 
 M5_TARGET := bench-gem5
@@ -70,3 +78,21 @@ libclean:
 # m5ops: $(LIBOBJ)
 # 		ar rc -o $(DIR)/lib$@.a $^
 # 		ranlib $(DIR)/lib$@.a
+
+
+N_BRANCHES := $$((1*1024))
+N_BRANCHES := $$((512))
+
+
+scramble_btb.h: scramble_btb.py
+	python3 $< $(N_BRANCHES) False > $@
+
+scramble_btb.c: scramble_btb.py
+	python3 $< $(N_BRANCHES) main > $@
+
+scramble_btb: scramble_btb.c
+	clang -g -flto -O3 -Wall -Wextra $< -o $@
+
+
+branch_btb_scramble.cc: scramble_btb.py
+	python3 $< $(N_BRANCHES) branch_btb > $@

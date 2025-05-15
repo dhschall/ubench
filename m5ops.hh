@@ -58,6 +58,7 @@ class M5Ops {
 	void workBegin(uint id);
 	void workEnd(uint id);
 
+	void checkpoint();
 };
 
 #endif // __M5OPS_HH__

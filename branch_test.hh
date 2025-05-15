@@ -48,6 +48,55 @@ private:
   uint64_t res_val;
 
 
+public:
+  uint64_t num_iterations;
+
+  BranchSortedData(uint64_t ARRAYSIZE);
+  ~BranchSortedData();
+
+  bool init() override;
+  void exec() override;
+  bool check();
+};
+
+
+
+
+class BranchIndirect : public Benchmark
+{
+private:
+  /* The arrays*/
+  uint64_t *A;
+  uint64_t array_size;
+  uint64_t ref_val;
+  uint64_t res_val;
+
+
+
+public:
+  uint64_t num_iterations;
+
+  BranchIndirect(uint64_t ARRAYSIZE);
+  ~BranchIndirect();
+
+  bool init() override;
+  void exec() override;
+  bool check();
+};
+
+
+
+
+class BranchReturn : public Benchmark
+{
+private:
+  /* The arrays*/
+  uint64_t *A;
+  uint64_t array_size;
+  uint64_t ref_val;
+  uint64_t res_val;
+
+
   __attribute__((optimize("O0")))
   int func1(int n) {
     return n;
@@ -60,17 +109,64 @@ private:
 
 int factorial(int);
 
-
 public:
   uint64_t num_iterations;
 
-  BranchSortedData(uint64_t ARRAYSIZE);
-  ~BranchSortedData();
+  BranchReturn(uint64_t ARRAYSIZE);
+  ~BranchReturn();
 
   bool init() override;
   void exec() override;
   bool check();
 };
+
+
+
+
+
+
+class BranchBTB : public Benchmark
+{
+private:
+  /* The arrays*/
+
+  void scramble_btb();
+
+
+  struct blob {
+    int memfd;
+    void *ptr;
+    int hugepage;
+
+    void *ptr_fn;
+    void *ptr_ret;
+    void *ptr_shadow;
+  };
+
+  struct blob blob;
+
+  void blob_alloc(struct blob *blob);
+  void blob_fill_code(struct blob *blob, int alignment, int cycle_count,
+          char *type);
+  void blob_exec(struct blob *blob);
+  void blob_warm_itlb(struct blob *blob);
+  void blob_warm_icache(struct blob *blob, int alignment, char *type);
+
+
+
+public:
+  uint64_t num_iterations;
+
+  BranchBTB();
+  ~BranchBTB();
+
+  bool init() override;
+  void exec() override;
+  bool check();
+};
+
+
+
 
 #endif // __BRANCH_SORTED_DATA_HH__
 

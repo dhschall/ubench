@@ -48,6 +48,7 @@
 #include "perf.hh"
 #include "benchmark.hh"
 #include "single_stride.hh"
+#include "branch_test.hh"
 #include "m5ops.hh"
 
 
@@ -204,11 +205,13 @@ int main(int argc, char **argv)
 	PerfEvent perf;
 
 	perf.registerCounter("cycles", PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES);
-    perf.registerCounter("instructions", PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
-    perf.registerCounter("L1D-misses", PERF_TYPE_HW_CACHE, PERF_COUNT_HW_CACHE_L1D|(PERF_COUNT_HW_CACHE_OP_READ<<8)|(PERF_COUNT_HW_CACHE_RESULT_MISS<<16));
-    perf.registerCounter("L1D-reads", PERF_TYPE_HW_CACHE, PERF_COUNT_HW_CACHE_L1D|(PERF_COUNT_HW_CACHE_OP_READ<<8)|(PERF_COUNT_HW_CACHE_RESULT_ACCESS<<16));
-    perf.registerCounter("L1D-writes", PERF_TYPE_HW_CACHE, PERF_COUNT_HW_CACHE_L1D|(PERF_COUNT_HW_CACHE_OP_WRITE<<8)|(PERF_COUNT_HW_CACHE_RESULT_ACCESS<<16));
-	perf.registerCounter("cs", PERF_TYPE_SOFTWARE, PERF_COUNT_SW_CONTEXT_SWITCHES);
+    // perf.registerCounter("instructions", PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
+    // perf.registerCounter("L1D-misses", PERF_TYPE_HW_CACHE, PERF_COUNT_HW_CACHE_L1D|(PERF_COUNT_HW_CACHE_OP_READ<<8)|(PERF_COUNT_HW_CACHE_RESULT_MISS<<16));
+    // perf.registerCounter("L1D-reads", PERF_TYPE_HW_CACHE, PERF_COUNT_HW_CACHE_L1D|(PERF_COUNT_HW_CACHE_OP_READ<<8)|(PERF_COUNT_HW_CACHE_RESULT_ACCESS<<16));
+    // // perf.registerCounter("L1D-writes", PERF_TYPE_HW_CACHE, PERF_COUNT_HW_CACHE_L1D|(PERF_COUNT_HW_CACHE_OP_WRITE<<8)|(PERF_COUNT_HW_CACHE_RESULT_ACCESS<<16));
+	// perf.registerCounter("cs", PERF_TYPE_SOFTWARE, PERF_COUNT_SW_CONTEXT_SWITCHES);
+	// perf.registerCounter("branch-misses", PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_MISSES);
+
 
 
 
@@ -228,10 +231,21 @@ int main(int argc, char **argv)
 	/** Initialize the benchmark */
 	const int size = 16*1024*1024;
 	// SimpleStride bench(size, stride);
-	SingleStride bench(stride);
-	bench.num_iterations = num_iterations;
+	// SingleStride bench(stride);
+	// bench.num_iterations = num_iterations;
+
+	BranchSortedData bench(stride);
+	// BranchIndirect bench(stride);
+	// BranchReturn bench(stride);
+	// BranchBTB bench;
+
+
 
 	bench.init();
+
+	// if (use_m5ops) {
+	// 	m5ops.checkpoint();
+	// }
 
 
 	uint64_t numbers[repeats][4] = { { 0 } };
@@ -243,6 +257,7 @@ int main(int argc, char **argv)
 		}
 		if (use_m5ops) {
 			m5ops.workBegin(j);
+			// m5ops.resetStats();
 		}
 
 		// perform benchmark
@@ -251,42 +266,48 @@ int main(int argc, char **argv)
 		// Stop measuring
 		if (use_m5ops) {
 			m5ops.workEnd(j);
+			// m5ops.dumpStats();
 		}
 		if (use_perf) {
 			perf.stop();
 		}
 
-		perf.printCounters();
+		// perf.printCounters();
 
 
 
-		double cycles = perf.getCounter("cycles");
-		double instr = perf.getCounter("instructions");
-		double misses = perf.getCounter("L1D-misses");
-		double reads = perf.getCounter("L1D-reads");
-		double writes = perf.getCounter("L1D-writes");
-		double cs = perf.getCounter("cs");
+		// double cycles = perf.getCounter("cycles");
+		// double instr = perf.getCounter("instructions");
+		// double misses = perf.getCounter("L1D-misses");
+		// double reads = perf.getCounter("L1D-reads");
+		// // double writes = perf.getCounter("L1D-writes");
+		// double cs = perf.getCounter("cs");
+		// double br_misp = perf.getCounter("branch-misses");
 
 
-		std::cout << std::setw(static_cast<int>(15))
-				  << "IPC: " <<  std::fixed << std::setprecision(2)
-				  << perf.getIPC() << std::endl;
+		// std::cout << std::setw(static_cast<int>(15))
+		// 		  << "IPC: " <<  std::fixed << std::setprecision(2)
+		// 		  << perf.getIPC() << std::endl;
 
-		std::cout << std::setw(static_cast<int>(15))
-				  << "MPKI: " <<  std::fixed << std::setprecision(2)
-				  << misses / instr * 1000 << std::endl;
+		// std::cout << std::setw(static_cast<int>(15))
+		// 		  << "MPKI: " <<  std::fixed << std::setprecision(2)
+		// 		  << misses / instr * 1000 << std::endl;
 
-		std::cout << std::setw(static_cast<int>(15))
-				  << "Miss ratio: " <<  std::fixed << std::setprecision(2)
-				  << misses / (reads + writes) << std::endl;
+		// std::cout << std::setw(static_cast<int>(15))
+		// 		  << "Miss ratio: " <<  std::fixed << std::setprecision(2)
+		// 		  << misses / (reads) << std::endl;
 
-		std::cout << std::setw(static_cast<int>(15))
-				  << "Context Switches: " <<  std::fixed << std::setprecision(0)
-				  << cs << std::endl;
+		// std::cout << std::setw(static_cast<int>(15))
+		// 		  << "Context Switches: " <<  std::fixed << std::setprecision(0)
+		// 		  << cs << std::endl;
+
+		// std::cout << std::setw(static_cast<int>(15))
+		// 		  << "Branch MPKI: " <<  std::fixed << std::setprecision(2)
+		// 		  << br_misp / instr * 1000 << std::endl;
 
 
-		std::cout << "Verify benchmark" << std::endl;
-		bench.check();
+		// std::cout << "Verify benchmark" << std::endl;
+		// bench.check();
 
 
 	}
