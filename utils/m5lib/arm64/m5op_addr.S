@@ -1,5 +1,17 @@
 /*
- * Copyright (c) 2022 EASE Group, The University of Edinburgh
+ * Copyright (c) 2010-2013, 2016-2017 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Copyright (c) 2003-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,65 +38,29 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+; #include <gem5/asm/generic/m5ops.h>
+#include "utils/m5lib/m5ops_generic.h"
 
+.macro	m5op_func, name, func
+        .globl \name
+        \name:
+        // Load the value of m5_mem into x9...
+#if defined(M5OP_PIC)
+        // using the global offset table.
+        adrp x9, :got:m5_mem
+        ldr x9, [ x9, #:got_lo12:m5_mem ]
+        ldr x9, [ x9 ]
+#else
+        // normally.
+        adrp x9, m5_mem
+        ldr x9, [ x9, #:lo12:m5_mem ]
+#endif
+        movz x10, #(\func << 8)
+        ldr x0, [ x9, x10 ]
+        ret
+.endm
 
-#include "m5ops.hh"
-
-#include "m5lib/m5_mmap.h"
-#include "m5lib/m5ops.h"
-
-
-M5Ops::M5Ops()
-  : initialized(false)
-{
-}
-
-M5Ops::~M5Ops()
-{
-	unmap_m5_mem();
-}
-
-void M5Ops::init()
-{
-	map_m5_mem();
-	initialized = true;
-}
-
-void M5Ops::start()
-{
-	// if (!initialized) {
-	// 	std::cerr << "Counters not initialized " << std::endl;
-	// }
-	resetStats();
-}
-
-
-void M5Ops::stop()
-{
-	dumpStats();
-}
-
-void M5Ops::dumpStats()
-{
-	m5_dump_stats(0,0);
-}
-
-void M5Ops::resetStats()
-{
-	m5_reset_stats(0,0);
-}
-
-void M5Ops::workBegin(uint id)
-{
-	m5_work_begin(id,0);
-}
-
-void M5Ops::workEnd(uint id)
-{
-	m5_work_end(id,0);
-}
-
-void M5Ops::checkpoint()
-{
-	m5_checkpoint(0,0);
-}
+.text
+#define M5OP(name, func) m5op_func M5OP_MERGE_TOKENS(name, _addr), func;
+        M5OP_FOREACH
+#undef M5OP

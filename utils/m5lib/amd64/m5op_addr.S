@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Technical University of Munich
+ * Copyright (c) 2003-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,61 +26,33 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+; #include <gem5/asm/generic/m5ops.h>
+#include "utils/m5lib/m5ops_generic.h"
 
+/*
+ * Note: The ABI for pseudo ops using the M5OP_ADDR is defined in
+ * src/arch/x86/pseudo_inst_abi.hh. If the ABI is changed below, it's likely
+ * that the ABI in the arch directory will also need to be updated.
+ */
 
-#include <iostream>
-#include <string>
-#include "benchmarks/base.hh"
-#include "utils/configs.h"
-// #include "utils/m5lib/m5lib.h"
-#include "utils/m5lib/m5ops.h"
+.macro  m5op_func, name, func
+        .globl \name
+        .func \name
+\name:
+#if defined(M5OP_PIC)
+        mov m5_mem@gotpcrel(%rip), %r11
+        mov (%r11), %r11
+#else
+        mov m5_mem, %r11
+#endif
+        mov $\func, %rax
+        shl $8, %rax
+        mov 0(%r11, %rax, 1), %rax
+        ret
+        .endfunc
+.endm
 
-
-
-int main(int argc, char **argv)
-{
-	Config cfg;
-	// Parse the command line options and the config file
-	if (!parseConfigs(argc, argv, cfg)) {
-		std::cerr << "Error parsing command line options" << std::endl;
-		return 1;
-	}
-	
-	cfg.print();
-
-	// Create the benchmark
-	BaseBenchmark* bench = createBenchmark(cfg.benchmark_name);
-	if (!bench) {
-		std::cerr << "Error creating benchmark: " << cfg.benchmark_name << std::endl;
-		return 1;
-	}
-
-	// Initialize the benchmark
-	if (!bench->init(cfg.bm_config)) {
-		delete bench;
-		std::cerr << "Error initializing benchmark: " << cfg.benchmark_name << std::endl;
-		return 1;
-	}
-
-	// Run the benchmark
-	for (int j = 0; j < cfg.repeats; j++) {
-		std::cout << "Running iteration: " << j << std::endl;
-
-		// Start measuring
-		if (cfg.use_m5ops) {
-			m5_work_begin(j, 0);
-		}
-
-		bench->exec();
-
-		// Stop measuring
-		if (cfg.use_m5ops) {
-			m5_work_end(j, 0);
-		}
-	}
-
-	// Print the results
-	bench->report();
-
-	delete bench;
-}
+.text
+#define M5OP(name, func) m5op_func M5OP_MERGE_TOKENS(name, _addr), func;
+        M5OP_FOREACH
+#undef M5OP

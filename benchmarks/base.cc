@@ -28,59 +28,33 @@
 
 
 
+/**
+ * @file
+ * Implementation of a benchmark interface.
+ */
+
+#include "base.hh"
+// #include "util.hh"
+#include "template/simple_loop.hh"
 #include <iostream>
-#include <string>
-#include "benchmarks/base.hh"
-#include "utils/configs.h"
-// #include "utils/m5lib/m5lib.h"
-#include "utils/m5lib/m5ops.h"
 
 
-
-int main(int argc, char **argv)
+BaseBenchmark* createBenchmark(const std::string name)
 {
-	Config cfg;
-	// Parse the command line options and the config file
-	if (!parseConfigs(argc, argv, cfg)) {
-		std::cerr << "Error parsing command line options" << std::endl;
-		return 1;
+	if (name == "simple_loop") {
+		return new SimpleLoop();
+	// } else if (name == "SimpleStride") {
+	// 	return new SimpleStride(name);
+	// } else if (name == "BranchSortedData") {
+	// 	return new BranchSortedData(name);
+	// } else if (name == "BranchIndirect") {
+	// 	return new BranchIndirect(name);
+	// } else if (name == "BranchReturn") {
+	// 	return new BranchReturn(name);
+	// } else if (name == "BranchBTB") {
+	// 	return new BranchBTB(name);
+	} else {
+		std::cerr << "Unknown benchmark: " << name << std::endl;
+		exit(1);
 	}
-	
-	cfg.print();
-
-	// Create the benchmark
-	BaseBenchmark* bench = createBenchmark(cfg.benchmark_name);
-	if (!bench) {
-		std::cerr << "Error creating benchmark: " << cfg.benchmark_name << std::endl;
-		return 1;
-	}
-
-	// Initialize the benchmark
-	if (!bench->init(cfg.bm_config)) {
-		delete bench;
-		std::cerr << "Error initializing benchmark: " << cfg.benchmark_name << std::endl;
-		return 1;
-	}
-
-	// Run the benchmark
-	for (int j = 0; j < cfg.repeats; j++) {
-		std::cout << "Running iteration: " << j << std::endl;
-
-		// Start measuring
-		if (cfg.use_m5ops) {
-			m5_work_begin(j, 0);
-		}
-
-		bench->exec();
-
-		// Stop measuring
-		if (cfg.use_m5ops) {
-			m5_work_end(j, 0);
-		}
-	}
-
-	// Print the results
-	bench->report();
-
-	delete bench;
 }

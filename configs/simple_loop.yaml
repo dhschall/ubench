@@ -1,0 +1,2 @@
+benchmark: "simple_loop"
+loop_count: 1000

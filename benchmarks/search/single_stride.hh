@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2006 The Regents of The University of Michigan
+ * Copyright (c) 2025 Technical University of Munich
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,33 +26,36 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-; #include <gem5/asm/generic/m5ops.h>
-#include "m5ops_generic.h"
 
-/*
- * Note: The ABI for pseudo ops using the M5OP_ADDR is defined in
- * src/arch/x86/pseudo_inst_abi.hh. If the ABI is changed below, it's likely
- * that the ABI in the arch directory will also need to be updated.
- */
+/** Simple stride benchmark
+ *
+ * Description:
+*/
 
-.macro  m5op_func, name, func
-        .globl \name
-        .func \name
-\name:
-#if defined(M5OP_PIC)
-        mov m5_mem@gotpcrel(%rip), %r11
-        mov (%r11), %r11
-#else
-        mov m5_mem, %r11
-#endif
-        mov $\func, %rax
-        shl $8, %rax
-        mov 0(%r11, %rax, 1), %rax
-        ret
-        .endfunc
-.endm
+#ifndef __SINGLE_STRIDE_HH__
+#define __SINGLE_STRIDE_HH__
 
-.text
-#define M5OP(name, func) m5op_func M5OP_MERGE_TOKENS(name, _addr), func;
-        M5OP_FOREACH
-#undef M5OP
+#include "benchmark.hh"
+
+
+class SingleStride : public Benchmark
+{
+private:
+  /* The arrays*/
+  uint64_t *A;
+  uint64_t array_size;
+  const uint64_t stride;
+  uint64_t ref_val;
+  uint64_t res_val;
+public:
+  uint64_t num_iterations;
+
+  SingleStride();
+  ~SingleStride();
+
+  bool init() override;
+  void exec() override;
+  bool check();
+};
+
+#endif // __SINGLE_STRIDE_HH__

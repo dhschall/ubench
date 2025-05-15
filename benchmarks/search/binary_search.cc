@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2006 The Regents of The University of Michigan
+ * Copyright (c) 2025 Technical University of Munich
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,21 +26,73 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-; #include <gem5/asm/generic/m5ops.h>
-#include "m5ops_generic.h"
 
-.macro m5op_func, name, func
-        .globl \name
-        .func \name
-\name:
-        .byte 0x0F, 0x04
-        .word \func
-        ret
-        .endfunc
-.endm
 
-.text
+/** Simple stride benchmark
+ *
+ * Description:
+*/
 
-#define M5OP(name, func) m5op_func name, func;
-        M5OP_FOREACH
-#undef M5OP
+#include "single_stride.hh"
+#include "util.hh"
+
+// This let the compiler know about the external assembly
+extern "C" {
+	uint64_t singlestride(uint64_t* A, uint64_t stride, uint64_t num_iterations) __attribute__((sysv_abi));
+}
+
+
+SingleStride::SingleStride(uint64_t _stride)
+	: Benchmark("Single Stride"),
+    A(nullptr),
+    array_size(0), stride(_stride),
+	num_iterations(0),
+	ref_val(0), res_val(0)
+{
+}
+
+SingleStride::~SingleStride()
+{
+	delete A;
+}
+
+bool SingleStride::init()
+{
+	array_size = stride*num_iterations;
+  	if (array_size == 0) {
+		std::cerr << "Array of size 0 makes no sense!" << std::endl;
+	}
+
+	if (stride == 0) {
+		std::cerr << "Stride of size 0 makes no sens!" << std::endl;
+	}
+
+	fatal_if(!isPowerOf2(array_size), "Must be power of two!\n");
+
+	A = new uint64_t[array_size];
+
+	// Here we initialize the memory.
+    // We set the values to verify that the assembly works
+    uint64_t idx = 0;
+    for (int i = 0; i < num_iterations; i++) {
+		idx += stride;
+        A[idx] = i;
+		ref_val += i;
+	}
+
+	Benchmark::init();
+  return true;
+}
+
+void SingleStride::exec()
+{
+	// Call the assembly
+	res_val =  singlestride(A, stride, num_iterations);
+}
+
+bool SingleStride::check()
+{
+	// Call the assembly
+    std::cout << "Ref: " << ref_val << " Res: " << res_val << std::endl;
+	return (ref_val == res_val) ? true : false;
+}

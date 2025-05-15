@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Technical University of Munich
+ * Copyright (c) 2003-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,61 +26,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+; #include <gem5/asm/generic/m5ops.h>
+#include "utils/m5lib/m5ops_generic.h"
 
+.macro m5op_func, name, func
+        .globl \name
+        .func \name
+\name:
+        .byte 0x0F, 0x04
+        .word \func
+        ret
+        .endfunc
+.endm
 
-#include <iostream>
-#include <string>
-#include "benchmarks/base.hh"
-#include "utils/configs.h"
-// #include "utils/m5lib/m5lib.h"
-#include "utils/m5lib/m5ops.h"
+.text
 
-
-
-int main(int argc, char **argv)
-{
-	Config cfg;
-	// Parse the command line options and the config file
-	if (!parseConfigs(argc, argv, cfg)) {
-		std::cerr << "Error parsing command line options" << std::endl;
-		return 1;
-	}
-	
-	cfg.print();
-
-	// Create the benchmark
-	BaseBenchmark* bench = createBenchmark(cfg.benchmark_name);
-	if (!bench) {
-		std::cerr << "Error creating benchmark: " << cfg.benchmark_name << std::endl;
-		return 1;
-	}
-
-	// Initialize the benchmark
-	if (!bench->init(cfg.bm_config)) {
-		delete bench;
-		std::cerr << "Error initializing benchmark: " << cfg.benchmark_name << std::endl;
-		return 1;
-	}
-
-	// Run the benchmark
-	for (int j = 0; j < cfg.repeats; j++) {
-		std::cout << "Running iteration: " << j << std::endl;
-
-		// Start measuring
-		if (cfg.use_m5ops) {
-			m5_work_begin(j, 0);
-		}
-
-		bench->exec();
-
-		// Stop measuring
-		if (cfg.use_m5ops) {
-			m5_work_end(j, 0);
-		}
-	}
-
-	// Print the results
-	bench->report();
-
-	delete bench;
-}
+#define M5OP(name, func) m5op_func name, func;
+        M5OP_FOREACH
+#undef M5OP

@@ -1,5 +1,17 @@
 /*
- * Copyright (c) 2022 EASE Group, The University of Edinburgh
+ * Copyright (c) 2010-2013, 2016-2017 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Copyright (c) 2003-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,39 +38,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+; #include <gem5/asm/generic/m5ops.h>
+#include "utils/m5lib/m5ops_generic.h"
 
-#ifndef __M5OPS_HH__
-#define __M5OPS_HH__
+.macro	m5op_func, name, func
+        .globl \name
+        \name:
+        .long 0xff000110 | (\func << 16)
+        ret
+.endm
 
-
-#include "util.hh"
-
-#include <error.h>
-
-
-
-class M5Ops {
-
-	bool initialized;
-
-    public:
-	M5Ops();
-	~M5Ops();
-
-	void init();
-	void close();
-
-	void start();
-
-
-	void stop();
-
-	void dumpStats();
-	void resetStats();
-	void workBegin(uint id);
-	void workEnd(uint id);
-
-	void checkpoint();
-};
-
-#endif // __M5OPS_HH__
+.text
+#define M5OP(name, func) m5op_func name, func;
+        M5OP_FOREACH
+#undef M5OP

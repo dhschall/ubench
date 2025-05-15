@@ -26,61 +26,49 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file
+ * Implementation of a benchmark interface.
+ */
 
+#pragma once
 
 #include <iostream>
-#include <string>
-#include "benchmarks/base.hh"
 #include "utils/configs.h"
-// #include "utils/m5lib/m5lib.h"
-#include "utils/m5lib/m5ops.h"
 
-
-
-int main(int argc, char **argv)
+class BaseBenchmark
 {
-	Config cfg;
-	// Parse the command line options and the config file
-	if (!parseConfigs(argc, argv, cfg)) {
-		std::cerr << "Error parsing command line options" << std::endl;
-		return 1;
-	}
-	
-	cfg.print();
+protected:
+  /** The name of the benchmark */
+  const std::string _name;
 
-	// Create the benchmark
-	BaseBenchmark* bench = createBenchmark(cfg.benchmark_name);
-	if (!bench) {
-		std::cerr << "Error creating benchmark: " << cfg.benchmark_name << std::endl;
-		return 1;
-	}
+  bool initialized;
 
-	// Initialize the benchmark
-	if (!bench->init(cfg.bm_config)) {
-		delete bench;
-		std::cerr << "Error initializing benchmark: " << cfg.benchmark_name << std::endl;
-		return 1;
-	}
+public:
+  BaseBenchmark(std::string name)
+      : _name(name),
+        initialized(false)
+  {
+  }
+  virtual ~BaseBenchmark() {}
 
-	// Run the benchmark
-	for (int j = 0; j < cfg.repeats; j++) {
-		std::cout << "Running iteration: " << j << std::endl;
+  /** Setup the benchmark such as allocating an array an populating
+   *  it with data */
+  virtual bool init(YAML::Node &bm_config) {
+    std::cout << "Setup " << _name << std::endl;
+    return true;
+  }
 
-		// Start measuring
-		if (cfg.use_m5ops) {
-			m5_work_begin(j, 0);
-		}
+  /** Performing the actual benchmark itself */
+  virtual void exec() = 0;
 
-		bench->exec();
+  /** Report results of the benchmark if needed */
+  virtual void report() {}
 
-		// Stop measuring
-		if (cfg.use_m5ops) {
-			m5_work_end(j, 0);
-		}
-	}
+  std::string getName() const {
+    return _name;
+  }
+};
 
-	// Print the results
-	bench->report();
 
-	delete bench;
-}
+BaseBenchmark* createBenchmark(const std::string name);

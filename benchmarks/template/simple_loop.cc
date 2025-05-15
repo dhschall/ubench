@@ -27,60 +27,45 @@
  */
 
 
+/**
+ * @file
+ * Simple loop benchmark as a template for other benchmarks.
+ * This benchmark is a simple loop that runs for a specified number of
+ * iterations.
+*/
 
-#include <iostream>
-#include <string>
-#include "benchmarks/base.hh"
-#include "utils/configs.h"
-// #include "utils/m5lib/m5lib.h"
-#include "utils/m5lib/m5ops.h"
+#include "simple_loop.hh"
 
-
-
-int main(int argc, char **argv)
+SimpleLoop::SimpleLoop()
+	: BaseBenchmark("Simple Loop"),
+	  loop_count(1000000)
 {
-	Config cfg;
-	// Parse the command line options and the config file
-	if (!parseConfigs(argc, argv, cfg)) {
-		std::cerr << "Error parsing command line options" << std::endl;
-		return 1;
+}
+
+SimpleLoop::~SimpleLoop()
+{
+}
+
+bool SimpleLoop::init(YAML::Node &bm_config)
+{
+	std::cout << "Setup " << _name << std::endl;
+	if (bm_config["loop_count"]) {
+		loop_count = bm_config["loop_count"].as<int>();
 	}
-	
-	cfg.print();
+	sum = 0;
+	return true;
+}
 
-	// Create the benchmark
-	BaseBenchmark* bench = createBenchmark(cfg.benchmark_name);
-	if (!bench) {
-		std::cerr << "Error creating benchmark: " << cfg.benchmark_name << std::endl;
-		return 1;
+void SimpleLoop::exec()
+{
+	for (int i = 0; i < loop_count; i++) {
+		// Do nothing
+		sum++;
 	}
+}
 
-	// Initialize the benchmark
-	if (!bench->init(cfg.bm_config)) {
-		delete bench;
-		std::cerr << "Error initializing benchmark: " << cfg.benchmark_name << std::endl;
-		return 1;
-	}
-
-	// Run the benchmark
-	for (int j = 0; j < cfg.repeats; j++) {
-		std::cout << "Running iteration: " << j << std::endl;
-
-		// Start measuring
-		if (cfg.use_m5ops) {
-			m5_work_begin(j, 0);
-		}
-
-		bench->exec();
-
-		// Stop measuring
-		if (cfg.use_m5ops) {
-			m5_work_end(j, 0);
-		}
-	}
-
-	// Print the results
-	bench->report();
-
-	delete bench;
+void SimpleLoop::report()
+{
+	std::cout << "Loop count: " << loop_count << std::endl;
+	std::cout << "Sum: " << sum << std::endl;
 }
