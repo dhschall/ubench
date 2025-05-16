@@ -1,2 +1,2 @@
-benchmark: "simple_loop"
+benchmark: "simple-loop"
 loop_count: 1000

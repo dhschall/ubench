@@ -68,7 +68,9 @@ bool parseConfigs(int argc, char **argv, Config &config)
                   << "  -c, --config         Specify a YAML config file\n"
                   << "  -r, --repeats        Number of times the benchmark should be repeated\n"
                   << "  -m, --m5ops          Enable m5ops to reset and dump stats between repeats\n"
-                  << "  -z, --perf           Enable perf\n";
+                  << "  -z, --perf           Enable perf"
+                  << "  -l, --list           List all available benchmarks\n"
+                  << "\n";
         return false;
     }
 
@@ -92,7 +94,10 @@ bool parseConfigs(int argc, char **argv, Config &config)
         config.use_perf = true;
     }
 
-
+    if (options.count("-l") || options.count("--list")) {
+        config.list_benchmarks = true;
+        return true;
+    }
 
 
     // Check if the benchmark name is set 

@@ -1,28 +1,42 @@
 # &mu;Bench
 
-This repository contains a collection of microbenchmarks for evaluating microarchitectural features on real hardware and the [gem5](https://gem5.org/) simulator.
+&mu;Bench is a microbenchmarking tool to evaluate microarchitectural features on run real hardware and [gem5](https://gem5.org/) simulator. The tool is designed to be extensible, allowing users to add easily add their own microbenchmarks.
 
+Refer to the [benchmarks README](benchmarks/README.md) for more information on the available benchmarks and how to add new ones.
 
-## Install Dependencies
-
-```bash
-sudo apt install cmake libboost-all-dev
-```
 
 ## Build the Benchmarks
 
+### Native Build
 ```bash
 # Creates a build directory and runs cmake to generate the build files
 # The -DARCH flag is used to specify the architecture for which the benchmarks are being built.
 # The default is x86_64, but you can specify aarch64
-cmake -B build                                                                                                                                                  
-
+cmake -B build -DARCH=x86_64                                      
 # Build the benchmark.
 cmake --build ./build -j $(nproc)
 ```
 
+### Using Docker + Cross Compilation
 
-### Cross-Compile for ARM/x86
+&mu;Bench is designed to be cross-platform and can be built for different architectures using the `-DARCH` flag.
+We use docker ([dockcross](https://github.com/dockcross/dockcross)) as a cross-compilation toolchain. 
+
+You can use the provided `Makefile` to build the benchmarks for different architectures which will automatically download the required docker images and run the cross-compilation commands.
+
+```bash
+make <arch>
+```
+
+Where `<arch>` can be one of the following:
+- `x86`: Build for x86_64 architecture (default)
+- `arm64`: Build for ARM64 architecture
+- `riscv64`: Build for RISC-V architecture
+- `all`: Build for all architectures
+
+You will find the compiled binaries in the corresponing `build-<arch>` folder.
+
+
 
 If you want to cross-compile the microbenchmarking tool for ARM or X86 we can use [dockcross](https://github.com/dockcross/dockcross)
 
@@ -52,25 +66,27 @@ chmod +x ./dockcross-x64
 
 
 
-## Run the benchmark natively
+## Run the benchmark
+
+### Native Run
 
 ```bash
 ./build/ubench --bmname <benchmark_name> --repeats <num_repeats> 
 ```
 
 
-## Run the benchmark in gem5
+### Run the benchmark in gem5
 
 The folder contains a minimal gem5 configuration to run the microbenchmarks in system call emulation mode (SE).
 ```bash
 # Run the benchmark in gem5
-<path/to/gem5>/build/<arch>/gem5.opt se-simple.py --isa <arch> <builddir>/ubench --bmname <benchmark_name> --repeats <num_repeats> 
+<path/to/gem5>/build/<arch>/gem5.opt se-simple.py --isa <arch> build-<arch>/ubench --bmname <benchmark_name> --repeats <num_repeats> 
 ```
 
 Example:
 ```bash
 # Run the benchmark in gem5
-<path/to/gem5>/build/X86/gem5.opt se-simple.py --isa X86 buildx64/ubench --bmname simple_loop --repeats 10 
+<path/to/gem5>/build/X86/gem5.opt se-simple.py --isa X86 build-x64/ubench --bmname simple_loop --repeats 10 
 ```
 
 ### M5Ops
