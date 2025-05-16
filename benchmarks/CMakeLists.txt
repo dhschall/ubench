@@ -4,6 +4,7 @@
 set(SOURCES
     base.cc
     template/simple_loop.cc
+    branch/random.cc
 )
 
 add_library(benchmarks STATIC ${SOURCES})
