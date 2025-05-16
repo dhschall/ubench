@@ -31,6 +31,8 @@
 #include <iostream>
 #include <string>
 #include "benchmarks/base.hh"
+// #include "utils/configs.h"
+
 #include "utils/configs.h"
 // #include "utils/m5lib/m5lib.h"
 #include "utils/m5lib/m5ops.h"
@@ -45,7 +47,13 @@ int main(int argc, char **argv)
 		std::cerr << "Error parsing command line options" << std::endl;
 		return 1;
 	}
-	
+
+	// List all available benchmarks
+	if (cfg.list_benchmarks) {
+		listBenchmarks();
+		return 0;
+	}
+
 	cfg.print();
 
 	// Create the benchmark
@@ -65,6 +73,9 @@ int main(int argc, char **argv)
 	// Run the benchmark
 	for (int j = 0; j < cfg.repeats; j++) {
 		std::cout << "Running iteration: " << j << std::endl;
+
+		// Reset the benchmark
+		bench->repeat();
 
 		// Start measuring
 		if (cfg.use_m5ops) {

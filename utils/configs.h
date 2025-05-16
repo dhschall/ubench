@@ -40,11 +40,14 @@ struct Config
    int repeats;
    YAML::Node bm_config;
 
+    bool list_benchmarks;
+
     Config()
          : benchmark_name(""),
             use_m5ops(false),
             use_perf(false),
-            repeats(1)
+            repeats(1),
+            list_benchmarks(false)
     {
     }
 

@@ -26,46 +26,52 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 /**
  * @file
  * Simple loop benchmark as a template for other benchmarks.
  * This benchmark is a simple loop that runs for a specified number of
  * iterations.
-*/
+ */
 
-#include "simple_loop.hh"
+// #include "simple_loop.hh"
 
-SimpleLoop::SimpleLoop()
-	: BaseBenchmark("Simple Loop"),
-	  loop_count(1000000)
-{
-}
+#include "benchmarks/base.hh"
+#include "benchmarks/registry.hh"
 
-SimpleLoop::~SimpleLoop()
-{
-}
+class SimpleLoop : public BaseBenchmark {
+ private:
+  int loop_count;
+  int sum;
 
-bool SimpleLoop::init(YAML::Node &bm_config)
-{
-	std::cout << "Setup " << _name << std::endl;
-	if (bm_config["loop_count"]) {
-		loop_count = bm_config["loop_count"].as<int>();
-	}
-	sum = 0;
-	return true;
-}
+ public:
+  SimpleLoop(std::string name) 
+  : BaseBenchmark(name),
+  	loop_count(1000000),
+	sum(0)
+	{}
 
-void SimpleLoop::exec()
-{
-	for (int i = 0; i < loop_count; i++) {
-		// Do nothing
-		sum++;
-	}
-}
+  ~SimpleLoop() {}
 
-void SimpleLoop::report()
-{
-	std::cout << "Loop count: " << loop_count << std::endl;
-	std::cout << "Sum: " << sum << std::endl;
-}
+  bool init(YAML::Node &bm_config) override {
+    std::cout << "Setup " << _name << std::endl;
+    if (bm_config["loop_count"]) {
+      loop_count = bm_config["loop_count"].as<int>();
+    }
+    sum = 0;
+    return true;
+  }
+
+  void exec() override {
+    for (int i = 0; i < loop_count; i++) {
+      // Do nothing
+      sum++;
+    }
+  }
+
+  void report() override {
+    std::cout << "Loop count: " << loop_count << std::endl;
+    std::cout << "Sum: " << sum << std::endl;
+  }
+};
+
+REGISTER_BENCHMARK("simple-loop", SimpleLoop);

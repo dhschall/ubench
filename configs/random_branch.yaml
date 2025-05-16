@@ -1,0 +1,2 @@
+benchmark: "random-branch"
+loop_count: 500

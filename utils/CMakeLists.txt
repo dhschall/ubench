@@ -38,22 +38,19 @@ target_link_libraries(utils yaml-cpp::yaml-cpp)
 if(${ARCH} MATCHES aarch64)
     ## Add ARM64 specific library
     set(M5_SOURCES
-        m5lib/arm64/m5op.S
-        m5lib/arm64/m5op_addr.S
+        m5lib/arm/m5op.S
+    )
+elseif(${ARCH} MATCHES riscv64)
+    ## Add RISC-V specific library
+    set(M5_SOURCES
+        m5lib/riscv/m5op.S
     )
 else()
     ## Add x86_64 specific library
     set(M5_SOURCES
-        m5lib/amd64/m5op.S
-        m5lib/amd64/m5op_addr.S
+        m5lib/x86/m5op.S
     )
 endif()
 
 add_library(m5lib ${M5_SOURCES})
 
-
-if(${ARCH} MATCHES aarch64)
-    target_compile_definitions(m5lib PRIVATE -DM5OP_ADDR=0x10010000)
-else()
-    target_compile_definitions(m5lib PRIVATE -DM5OP_ADDR=0xFFFF0000)
-endif()

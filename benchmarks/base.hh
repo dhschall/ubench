@@ -35,6 +35,7 @@
 
 #include <iostream>
 #include "utils/configs.h"
+#include <list>
 
 class BaseBenchmark
 {
@@ -65,10 +66,15 @@ public:
   /** Report results of the benchmark if needed */
   virtual void report() {}
 
+  /** Repeat ended. Can be used to reset something to make each repeat
+   * deterministic */
+  virtual void repeat() {}
+
   std::string getName() const {
     return _name;
   }
 };
 
 
-BaseBenchmark* createBenchmark(const std::string name);
+BaseBenchmark* createBenchmark(const std::string& name);
+void listBenchmarks();

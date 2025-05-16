@@ -41,6 +41,7 @@ target_link_libraries(${TARGET_NAME}
                        utils
                        m5lib
                        )
+target_link_options(${TARGET_NAME} PRIVATE -Wl,--whole-archive $<TARGET_FILE:benchmarks> -Wl,--no-whole-archive)
 target_compile_options(${TARGET_NAME} PRIVATE -Wall)
 
 

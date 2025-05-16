@@ -35,26 +35,24 @@
 
 #include "base.hh"
 // #include "util.hh"
-#include "template/simple_loop.hh"
+#include "registry.hh"
 #include <iostream>
 
 
-BaseBenchmark* createBenchmark(const std::string name)
-{
-	if (name == "simple_loop") {
-		return new SimpleLoop();
-	// } else if (name == "SimpleStride") {
-	// 	return new SimpleStride(name);
-	// } else if (name == "BranchSortedData") {
-	// 	return new BranchSortedData(name);
-	// } else if (name == "BranchIndirect") {
-	// 	return new BranchIndirect(name);
-	// } else if (name == "BranchReturn") {
-	// 	return new BranchReturn(name);
-	// } else if (name == "BranchBTB") {
-	// 	return new BranchBTB(name);
-	} else {
-		std::cerr << "Unknown benchmark: " << name << std::endl;
-		exit(1);
+BaseBenchmark* createBenchmark(const std::string& name) {
+    BaseBenchmark* benchmark = BenchmarkRegistry::getInstance().createBenchmark(name);
+    if (!benchmark) {
+        std::cerr << "Unknown benchmark: " << name << std::endl;
+        exit(1);
+    }
+    return benchmark;
+}
+
+
+void listBenchmarks() {
+	std::cout << "Available benchmarks:" << std::endl;
+	auto bms = BenchmarkRegistry::getInstance().getBenchmarks();
+	for (const auto& bm : bms) {
+		std::cout << "  - " << bm.first << std::endl;
 	}
 }

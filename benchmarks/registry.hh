@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2006 The Regents of The University of Michigan
+ * Copyright (c) 2025 Technical University of Munich
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,33 +26,57 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-; #include <gem5/asm/generic/m5ops.h>
-#include "utils/m5lib/m5ops_generic.h"
-
-/*
- * Note: The ABI for pseudo ops using the M5OP_ADDR is defined in
- * src/arch/x86/pseudo_inst_abi.hh. If the ABI is changed below, it's likely
- * that the ABI in the arch directory will also need to be updated.
+/**
+ * @file
+ * Benchmark registry
  */
 
-.macro  m5op_func, name, func
-        .globl \name
-        .func \name
-\name:
-#if defined(M5OP_PIC)
-        mov m5_mem@gotpcrel(%rip), %r11
-        mov (%r11), %r11
-#else
-        mov m5_mem, %r11
-#endif
-        mov $\func, %rax
-        shl $8, %rax
-        mov 0(%r11, %rax, 1), %rax
-        ret
-        .endfunc
-.endm
+#pragma once
 
-.text
-#define M5OP(name, func) m5op_func M5OP_MERGE_TOKENS(name, _addr), func;
-        M5OP_FOREACH
-#undef M5OP
+#include <functional>
+#include <map>
+#include <string>
+#include <iostream>
+
+#include "base.hh"
+
+class BenchmarkRegistry {
+ public:
+  using BenchmarkFactory = std::function<BaseBenchmark *()>;
+
+  static BenchmarkRegistry &getInstance() {
+    static BenchmarkRegistry instance;
+    return instance;
+  }
+
+  void registerBenchmark(const std::string &name, BenchmarkFactory factory) {
+    // std::cout << "Registering benchmark: " << name << std::endl;
+    benchmarks[name] = factory;
+  }
+
+  BaseBenchmark *createBenchmark(const std::string &name) const {
+    auto it = benchmarks.find(name);
+    if (it != benchmarks.end()) {
+      return it->second();
+    }
+    return nullptr;
+  }
+
+    std::map<std::string, BenchmarkFactory> getBenchmarks() const {
+        return benchmarks;
+    }
+
+ private:
+  std::map<std::string, BenchmarkFactory> benchmarks;
+
+  // Private constructor for singleton pattern
+  BenchmarkRegistry() = default;
+};
+
+#define REGISTER_BENCHMARK(name, className)             \
+  static bool _##className##_registered = []() {        \
+    BenchmarkRegistry::getInstance().registerBenchmark( \
+        name, []() { return new className(name); });    \
+    return true;                                        \
+  }()
+

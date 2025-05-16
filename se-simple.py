@@ -115,6 +115,36 @@ processor = SimpleProcessor(
     cpu_type=cpu_types[args.cpu_type], isa=isa_choices[args.isa], num_cores=1
 )
 
+cpu = processor.cores[-1].core
+
+tage_bp = False
+tage_bp = True
+
+if tage_bp:
+    from m5.objects import (
+        SimpleBTB,
+        ITTAGE,
+        LTAGE,
+        LTAGE_TAGE,
+        TAGE_SC_L_TAGE_64KB,
+    )
+    class BTB(SimpleBTB):
+        numEntries = 16*1024
+        # associativity = 4
+        associativity = 8
+
+
+    class BPTageSCL(LTAGE):
+        instShiftAmt = 2
+        btb = BTB()
+        # tage = TAGE_SC_L_TAGE_64KB()
+        tage = LTAGE_TAGE()
+        requiresBTBHit = True
+
+
+    cpu.branchPred = BPTageSCL()
+
+
 
 print(
     "Running {} on {} CPU: {}".format(

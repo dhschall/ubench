@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2010-2013, 2016-2017 ARM Limited
- * All rights reserved
+ * Copyright (c) 2020 The Regents of the University of California.
+ * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
  * not be construed as granting a license to any other intellectual
@@ -10,9 +10,6 @@
  * terms below provided that you ensure that this notice is replicated
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2003-2006 The Regents of The University of Michigan
- * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -38,29 +35,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-; #include <gem5/asm/generic/m5ops.h>
+
 #include "utils/m5lib/m5ops_generic.h"
+
+// riscv pseudo instructions have bit 1:0 (QUADRANT) = 0x3,
+// bit 6:2 (OPCODE5) = 0x1e, and bit 31:25 (M5FUNC) specifies
+// the function performed by pseudo instruction
 
 .macro	m5op_func, name, func
         .globl \name
         \name:
-        // Load the value of m5_mem into x9...
-#if defined(M5OP_PIC)
-        // using the global offset table.
-        adrp x9, :got:m5_mem
-        ldr x9, [ x9, #:got_lo12:m5_mem ]
-        ldr x9, [ x9 ]
-#else
-        // normally.
-        adrp x9, m5_mem
-        ldr x9, [ x9, #:lo12:m5_mem ]
-#endif
-        movz x10, #(\func << 8)
-        ldr x0, [ x9, x10 ]
+        .long 0x0000007b | (\func << 25)
         ret
 .endm
 
 .text
-#define M5OP(name, func) m5op_func M5OP_MERGE_TOKENS(name, _addr), func;
+#define M5OP(name, func) m5op_func name, func;
         M5OP_FOREACH
 #undef M5OP
