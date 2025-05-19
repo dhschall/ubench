@@ -1,0 +1,4 @@
+# benchmark: "btb-stress"
+benchmark: "btb-stress-asm"
+loop_count: 1
+num_branches: 1K
