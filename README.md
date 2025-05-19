@@ -66,12 +66,16 @@ chmod +x ./dockcross-x64
 
 
 
-## Run the benchmark
+## Running a benchmark
 
-### Native Run
+To run a benchmark, you need to specify the benchmark to run and optionally the number of repetitions. There are two ways to select the benchmark to run. (1) By name passing the benchmark name with the `--bmname/-b` flag to `ubench` or (2) by providing a configuration file with the `--config/-c` flag. The configuration file is a YAML file that can contain further configuration options for the benchmark. See `./configs` for example configuration files.
+
 
 ```bash
+# Run the benchmark with the benchmark name
 ./build/ubench --bmname <benchmark_name> --repeats <num_repeats> 
+# Run the benchmark with a configuration file
+./build/ubench --config <config_file> --repeats <num_repeats> 
 ```
 
 

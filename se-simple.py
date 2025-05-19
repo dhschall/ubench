@@ -179,10 +179,10 @@ def workitems(start) -> bool:
     while True:
         if start:
             print("Begin Repetition ", cnt)
+            m5.stats.reset()
         else:
             print("End Repetition ", cnt)
             m5.stats.dump()
-            m5.stats.reset()
             cnt += 1
 
         yield False

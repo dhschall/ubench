@@ -61,3 +61,5 @@ __pycache__/
 build*
 m5out
 dockcross*
+*_gen.h
+*_gen.cc
