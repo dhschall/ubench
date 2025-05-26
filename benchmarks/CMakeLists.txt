@@ -5,6 +5,7 @@ set(SOURCES
     base.cc
     template/simple_loop.cc
     branch/random.cc
+    branch/throughput.cc
 
     btb/btb_stress.cc
     btb/btb_stress_asm.cc
