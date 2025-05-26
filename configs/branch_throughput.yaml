@@ -1,0 +1,2 @@
+benchmark: "branch-throughput"
+loop_count: 20

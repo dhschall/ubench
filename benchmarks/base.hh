@@ -37,6 +37,11 @@
 #include "utils/configs.h"
 #include <list>
 
+
+#define X86_64 1
+#define ARM64 2
+#define RISCV64 3
+
 class BaseBenchmark
 {
 protected:

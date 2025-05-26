@@ -5,6 +5,9 @@ Name | Group | Description | `x86` | `Arm` | `RISC-V`|
 --- | --- | --- | :-: | :-: | :-: |
 `simple-loop` | Example | Simple loop that does nothing | ✅ | ✅ | ✅
 `random-branch` | Branch | A loop with a random branch |  ✅ | ✅ | ✅
+`branch-throughput` | Branch | Executes a sequence of branches and Nops. Useful to determine maximum branch througput.| :x: | ✅ | :x: 
+`btb-stress` | BTB | Executes `N` number of unique branch instructions |  ✅ | ✅ | ✅
+`btb-stress-asm` | BTB | Similarly to `btb-stress` but written in assembly allowing more specific functionality |  ✅ | ✅ | ✅
 
 
 ## Adding a New Benchmark
