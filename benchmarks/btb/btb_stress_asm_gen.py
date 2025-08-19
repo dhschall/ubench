@@ -29,7 +29,6 @@ int __attribute__((noinline)) scramble_btb_%s() {
     int c = 0;
 
     asm volatile (
-        ".align 16\\n"
 '''[1:] % func_name)
 
     ## Generate n branch instructions
@@ -63,7 +62,6 @@ int __attribute__((noinline)) scramble_btb_%s() {
     int c = 0;
 
     asm volatile (
-        ".align 16\\n"
 '''[1:] % func_name)
 
     ## Generate n branch instructions
@@ -97,7 +95,6 @@ int __attribute__((noinline)) scramble_btb_%s() {
     int c = 0;
 
     asm volatile (
-        ".align 16\\n"
 '''[1:] % func_name)
 
     ## Generate n branch instructions

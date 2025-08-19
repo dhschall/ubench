@@ -34,63 +34,129 @@
  */
 
 #include <iostream>
+#include <algorithm>
+#include <cassert>
 
 #include "benchmarks/base.hh"
 #include "benchmarks/registry.hh"
-#include "lfsr.h"
 
-class RandomBranch : public BaseBenchmark {
- private:
+
+#define L1I_CACHE_LINE_SIZE (64)
+#define L1I_CACHE_SIZE (16 * 1024)
+#define L1I_CACHE_ASSOCIATIVITY (4)
+
+#define L1D_CACHE_LINE_SIZE (64)
+#define L1D_CACHE_SIZE (64 * 1024)
+#define L1D_CACHE_ASSOCIATIVITY (4)
+
+#define L2D_CACHE_LINE_SIZE (64)
+#define L2D_CACHE_SIZE (2048 * 1024)
+#define L2D_CACHE_ASSOCIATIVITY (8)
+
+#define STORE_BUFFER_SIZE (120)
+
+#define L1D_TLB_SIZE (64)
+
+#define PAGE_SIZE (4096)
+
+
+#define UNUSED(x) (void)x
+
+#define FUNC(f) \
+  static __attribute__((aligned(L1I_CACHE_SIZE))) void f(void* fp) { \
+    void (**funcPtr)(void*) = reinterpret_cast<void (**)(void*)>(fp); \
+    void(*func)(void*) = *(funcPtr++); \
+    (*func)(funcPtr); \
+  }
+
+FUNC(fA)
+FUNC(fB)
+FUNC(fC)
+FUNC(fD)
+FUNC(fE)
+FUNC(fF)
+FUNC(fG)
+FUNC(fH)
+FUNC(fI)
+FUNC(fJ)
+FUNC(fK)
+FUNC(fL)
+
+static __attribute__((aligned(L1I_CACHE_SIZE))) void fZ(void* fp) {
+    UNUSED(fp);
+}
+
+
+static void (*funcs[])(void*) = {
+  &fA, &fB, &fC, &fD, &fE, &fF, &fG, &fH, &fI, &fJ, &fK, &fL,
+  &fZ
+};
+
+static void assertFuncsArePageAligned(void) {
+  void(**funcPtr)(void*) = funcs;
+  uintptr_t pageMask = (uintptr_t)(L1I_CACHE_SIZE - 1);
+  while(*funcPtr) {
+    uintptr_t diff = (uintptr_t)(*funcPtr) & pageMask;
+    UNUSED(diff);
+    assert(diff == 0);
+    funcPtr++;
+  }
+}
+
+static void assertFuncsAreDistinct(void) {
+  void(**funcPtr1)(void*) = funcs;
+  while(*funcPtr1) {
+    void(**funcPtr2)(void*) = funcPtr1 + 1;
+    while(*funcPtr2) {
+      assert(*funcPtr1 != *funcPtr2);
+      funcPtr2++;
+    }
+    funcPtr1++;
+  }
+}
+
+
+
+class L1ICache : public BaseBenchmark {
+  private:
   int loop_count;
-  int br_exec_count;
-  int br_taken_count;
-  Lfsr32 lfsr;
+  int sum;
 
  public:
-  RandomBranch(std::string name) 
-      : BaseBenchmark(name),
-        loop_count(100),
-        lfsr(0xA01)  // Initialize LFSR with a seed
-  {}
+ L1ICache(std::string name)
+  : BaseBenchmark(name),
+  	loop_count(1000000),
+	  sum(0)
+	{}
 
-  ~RandomBranch() {}
+  ~L1ICache() {}
 
   bool init(YAML::Node &bm_config) override {
     std::cout << "Setup " << _name << std::endl;
     if (bm_config["loop_count"]) {
       loop_count = bm_config["loop_count"].as<int>();
     }
-    br_exec_count = 0;
-    br_taken_count = 0;
-    lfsr.reset();
+    sum = 0;
+
+    assertFuncsArePageAligned();
+    assertFuncsAreDistinct();
     return true;
   }
 
   void exec() override {
     for (int i = 0; i < loop_count; i++) {
-      auto val = lfsr.next();
-      if ((val >> 3) % 2 == 0) {
-        // Simulate a branch taken
-        br_taken_count++;
-      }
-      br_exec_count++;
-    }
-  }
 
-  void repeat() override {
-    br_exec_count = 0;
-    br_taken_count = 0;
-    lfsr.reset();
+      (*funcs[0])((void*)funcs);
+
+      sum++;
+    }
   }
 
   void report() override {
     std::cout << "Loop count: " << loop_count << std::endl;
-    std::cout << "Branch executed: " << br_exec_count << std::endl;
-    std::cout << "Branch taken: " << br_taken_count << std::endl;
-    std::cout << "Branch not taken: " << br_exec_count - br_taken_count
-              << std::endl;
+    std::cout << "Sum: " << sum << std::endl;
   }
+
 };
 
-
-REGISTER_BENCHMARK("random-branch", RandomBranch);
+REGISTER_BENCHMARK("cache-l1i", L1ICache);
