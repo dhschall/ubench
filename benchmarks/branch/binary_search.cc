@@ -34,63 +34,98 @@
  */
 
 #include <iostream>
+#include <algorithm>
 
 #include "benchmarks/base.hh"
 #include "benchmarks/registry.hh"
-#include "lfsr.h"
 
-class RandomBranch : public BaseBenchmark {
+class BinarySearch : public BaseBenchmark {
  private:
-  int loop_count;
-  int br_exec_count;
-  int br_taken_count;
-  Lfsr32 lfsr;
+  int num_keys;
+  int array_size;
+  int *A;
+  int *keys;
+  int found_keys;
+
 
  public:
-  RandomBranch(std::string name) 
+  BinarySearch(std::string name)
       : BaseBenchmark(name),
-        loop_count(100),
-        lfsr(0xA01)  // Initialize LFSR with a seed
-  {}
+        num_keys(100),
+        array_size(100),
+        A(nullptr),
+        found_keys(0) {}
 
-  ~RandomBranch() {}
+  ~BinarySearch() {
+    if (A) {
+      delete A;
+    }
+    if (keys) {
+      delete keys;
+    }
+  }
 
   bool init(YAML::Node &bm_config) override {
     std::cout << "Setup " << _name << std::endl;
-    if (bm_config["loop_count"]) {
-      loop_count = bm_config["loop_count"].as<int>();
+    if (bm_config["num_keys"]) {
+      num_keys = bm_config["loop_count"].as<int>();
     }
-    br_exec_count = 0;
-    br_taken_count = 0;
-    lfsr.reset();
+    if (bm_config["array_size"]) {
+      array_size = bm_config["array_size"].as<int>();
+    }
+    A = new int[array_size];
+    for (int i = 0; i < array_size; i++) {
+      A[i] = std::rand() % 256;
+      // printf("A[%d] = %d\n", i, A[i]);
+    }
+    keys = new int[num_keys];
+    for (int i = 0; i < num_keys; i++) {
+      keys[i] = std::rand() % 256;
+    }
     return true;
   }
 
   void exec() override {
-    for (int i = 0; i < loop_count; i++) {
-      auto val = lfsr.next();
-      if ((val >> 3) % 2 == 0) {
-        // Simulate a branch taken
-        br_taken_count++;
+
+    for (int i = 0; i < num_keys; i++) {
+      int target = keys[i];
+      int result = Binary_search(A, array_size, target);
+      if (result != -1) {
+        found_keys++;
       }
-      br_exec_count++;
     }
   }
 
   void repeat() override {
-    br_exec_count = 0;
-    br_taken_count = 0;
-    lfsr.reset();
+    found_keys = 0;
   }
 
   void report() override {
-    std::cout << "Loop count: " << loop_count << std::endl;
-    std::cout << "Branch executed: " << br_exec_count << std::endl;
-    std::cout << "Branch taken: " << br_taken_count << std::endl;
-    std::cout << "Branch not taken: " << br_exec_count - br_taken_count
+    std::cout << "Array size: " << array_size << std::endl;
+    std::cout << "Number of keys: " << num_keys << std::endl;
+    std::cout << "Found keys: " << found_keys << std::endl;
+    std::cout << "Average found keys per run: " << (found_keys / num_keys)
               << std::endl;
   }
+
+  int __attribute__((noinline)) Binary_search(int* x, int xsize, int target) {
+    int maximum = xsize - 1;
+    int minimum = 0;
+    int mean;
+    while (maximum > minimum) {
+      mean = (maximum + minimum) / 2;
+      if (x[mean] == target) {
+        // std::cout << "The number you're looking for is found! \n";
+        return mean;
+      } else if (x[mean] > target) {
+        maximum = (mean - 1);
+      } else {
+        minimum = (mean + 1);
+      }
+    }
+    return -1;
+  }
+
 };
 
-
-REGISTER_BENCHMARK("random-branch", RandomBranch);
+REGISTER_BENCHMARK("binary-search", BinarySearch);

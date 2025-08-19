@@ -12,6 +12,7 @@ main_tmpl = """
 
 int __attribute__((optimize("O0"))) scramble_btb(int nbranches) {{
     int i = 0;
+    int N = nbranches;
 
 {loop_tmpl}
 
@@ -24,7 +25,7 @@ end:
 # Generate N branches that all check if i is less than `nbranches`
 # After that many unique branches, the function will return
 snippet = """
-    if (i > nbranches) {
+    if (i > N) {
         i = i - 1;
         goto end;
     } else {

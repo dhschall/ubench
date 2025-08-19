@@ -1,0 +1,2 @@
+benchmark: "binary-search"
+loop_count: 20

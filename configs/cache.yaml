@@ -1,0 +1,2 @@
+benchmark: "cache-l1i"
+loop_count: 1000

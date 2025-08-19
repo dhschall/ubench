@@ -6,9 +6,12 @@ set(SOURCES
     template/simple_loop.cc
     branch/random.cc
     branch/throughput.cc
+    branch/binary_search.cc
 
     btb/btb_stress.cc
     btb/btb_stress_asm.cc
+
+    cache/l1i_cache.cc
 )
 
 add_library(benchmarks STATIC ${SOURCES})
