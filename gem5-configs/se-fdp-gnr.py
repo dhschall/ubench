@@ -154,8 +154,9 @@ processor = SimpleProcessor(
 )
 cpu = processor.cores[-1].core
 
-## Configure CPU
-config_GNR(cpu, args.fdp)
+if args.cpu_type=="o3":
+    ## Configure CPU
+    config_GNR(cpu, args.fdp)
 
 
 ## Configure Branch predictor
