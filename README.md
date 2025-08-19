@@ -84,20 +84,20 @@ To run a benchmark, you need to specify the benchmark to run and optionally the 
 The folder contains a minimal gem5 configuration to run the microbenchmarks in system call emulation mode (SE).
 ```bash
 # Run the benchmark in gem5
-<path/to/gem5>/build/<arch>/gem5.opt se-simple.py --isa <arch> build-<arch>/ubench --bmname <benchmark_name> --repeats <num_repeats> 
+<path/to/gem5>/build/<arch>/gem5.opt ./gem5-configs/se-simple.py --isa <arch> build-<arch>/ubench --bmname <benchmark_name> --repeats <num_repeats> 
 ```
 
 Example:
 ```bash
 # Run the benchmark in gem5
-<path/to/gem5>/build/X86/gem5.opt se-simple.py --isa X86 build-x64/ubench --bmname simple_loop --repeats 10 
+<path/to/gem5>/build/X86/gem5.opt ./gem5-configs/se-simple.py --isa X86 build-x64/ubench --bmname simple_loop --repeats 10 
 ```
 
 ### M5Ops
 The microbenchmarks is compiled using gem5's magic instructions (m5ops). These instructions are useful the exit the simulation loop at specific point during the simulation.
 By passing the `--m5ops/-m` flag to the microbenchmark, the benchmark execute a `workitem_start` before a repetition starts and a `workitem_end` after the repetition ends.
 The user can then define in the gem5 configuration file what to do when the `workitem_start` and `workitem_end` instructions are executed. For example dumping or resetting the stats.
-Refer to the [se-simple.py](se-simple.py) for an example of how to process the workitem exit instructions.
+Refer to the [se-simple.py](./gem5-configs/se-simple.py) for an example of how to process the workitem exit instructions.
 
 
 ## Benchmarks
