@@ -62,6 +62,7 @@ from m5.objects import (
     AddrRange,
     Cache,
     BranchPredictor,
+    BranchRecyclingCache,
 )
 
 from gem5.isas import ISA
@@ -169,14 +170,14 @@ class BPU(BranchPredictor):
     instShiftAmt = 2
     btb = BTB()
     indirectBranchPred=ITTAGE()
-    conditionalBranchPred = TAGE_SC_L_64KB(
-        tage=TAGE_SC_L_TAGE_64KB()
+    conditionalBranchPred = BranchRecyclingCache(
+        base=TAGE_SC_L_64KB(),
+        enable_recycling = True,
     )
     requiresBTBHit = True
     takenOnlyHistory=True
 
 cpu.branchPred = BPU()
-
 
 
 # The gem5 library simble board which can be used to run simple SE-mode

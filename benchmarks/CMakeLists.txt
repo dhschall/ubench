@@ -7,6 +7,7 @@ set(SOURCES
     branch/random.cc
     branch/throughput.cc
     branch/binary_search.cc
+    branch/branch_recycling.cc
 
     btb/btb_stress.cc
     btb/btb_stress_asm.cc
