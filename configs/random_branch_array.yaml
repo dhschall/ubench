@@ -1,0 +1,3 @@
+benchmark: "random-branch-array"
+array_size: 64000
+array_step: 64

@@ -5,6 +5,7 @@ set(SOURCES
     base.cc
     template/simple_loop.cc
     branch/random.cc
+    branch/random_array.cc
     branch/throughput.cc
     branch/binary_search.cc
 
