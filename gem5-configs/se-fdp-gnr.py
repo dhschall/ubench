@@ -63,6 +63,7 @@ from m5.objects import (
     Cache,
     BranchPredictor,
     BranchRecyclingCache,
+    BranchRecyclingCacheDynInst,
 )
 
 from gem5.isas import ISA
@@ -170,14 +171,18 @@ class BPU(BranchPredictor):
     instShiftAmt = 2
     btb = BTB()
     indirectBranchPred=ITTAGE()
-    conditionalBranchPred = BranchRecyclingCache(
+    conditionalBranchPred = BranchRecyclingCacheDynInst(
         base=TAGE_SC_L_64KB(),
         enable_recycling = True,
+        enable_training = False,
+        enable_training2 = True,
+        enable_strite = False,
     )
     requiresBTBHit = True
     takenOnlyHistory=True
 
 cpu.branchPred = BPU()
+cpu.branchPred.conditionalBranchPred.registerCpu(cpu)
 
 
 # The gem5 library simble board which can be used to run simple SE-mode
@@ -204,10 +209,10 @@ def workitems(start) -> bool:
     cnt = 1
     while True:
         if start:
-            print("Begin Repetition ", cnt)
+            print("Begin Repetition ", cnt, m5.curTick()) #Add Tick printout
             m5.stats.reset()
         else:
-            print("End Repetition ", cnt)
+            print("End Repetition ", cnt, m5.curTick())
             m5.stats.dump()
             cnt += 1
 
@@ -226,6 +231,9 @@ simulator = Simulator(
         },
 )
 simulator.run()
+
+
+cpu.branchPred.conditionalBranchPred.dump("branch_stats.csv")
 
 print(
     "Exiting @ tick {} because {}.".format(

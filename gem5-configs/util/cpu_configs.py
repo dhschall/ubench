@@ -137,8 +137,8 @@ def configure_cpu_multi_ppc(cpu, args):
 
 
 
-
-def config_GNR(cpu, fdp=True, factor=1, width=8):
+# Modify to test how predictor handels larger widths
+def config_GNR(cpu, fdp=True, factor=1, width=30):
     """
     Configuration for Intel Xeon Granit Rapid
     8-wide, 576-entry ROB

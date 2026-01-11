@@ -5,7 +5,7 @@
 #include "benchmarks/registry.hh"
 #include "lfsr.h"
 
-class BranchRecycling : public BaseBenchmark
+class BranchDependentRecycling : public BaseBenchmark
 {
 private:
   int loop_count;
@@ -16,14 +16,14 @@ private:
   std::vector<int> rand_vals;
 
 public:
-  BranchRecycling(std::string name)
+  BranchDependentRecycling(std::string name)
       : BaseBenchmark(name),
         loop_count(12500),
         lfsr(0xA01) // Initialize LFSR with a seed
   {
   }
 
-  ~BranchRecycling() {}
+  ~BranchDependentRecycling() {}
 
   bool init(YAML::Node &bm_config) override
   {
@@ -54,6 +54,11 @@ public:
       if (val < 5)
       {
         br_taken_count++;
+       // i++; //Skip next iteration to create dependency
+        if(i < loop_count){
+          rand_vals[i+1] = static_cast<int>(lfsr.next() % 10) + 1;
+        }
+
       }
       br_exec_count++;
     }
@@ -81,4 +86,4 @@ public:
   }
 };
 
-REGISTER_BENCHMARK("branch-recycling", BranchRecycling);
+REGISTER_BENCHMARK("branch-dependent-recycling", BranchDependentRecycling);
