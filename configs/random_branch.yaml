@@ -1,2 +1,2 @@
-benchmark: "random-branch"
-loop_count: 500
+benchmark: "branch-recycling"
+loop_count: 12500

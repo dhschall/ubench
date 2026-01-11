@@ -62,7 +62,7 @@ class RandomBranch : public BaseBenchmark {
     }
     br_exec_count = 0;
     br_taken_count = 0;
-    lfsr.reset();
+   // lfsr.reset();
     return true;
   }
 
