@@ -14,6 +14,8 @@ set(SOURCES
 
     cache/l1i_cache.cc
 
+    prefetch/single_stride.cc
+
     value/stride.cc
 )
 

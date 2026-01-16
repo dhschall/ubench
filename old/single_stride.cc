@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Technical University of Munich
+ * Copyright (c) 2022 EASE Group, The University of Edinburgh
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,79 +26,73 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- * Simple loop benchmark as a template for other benchmarks.
- * This benchmark is a simple loop that runs for a specified number of
- * iterations.
- */
 
-#include <iostream>
 
-#include "benchmarks/base.hh"
-#include "benchmarks/registry.hh"
+/** Simple stride benchmark
+ *
+ * Description:
+*/
 
-class PrefetchStride : public BaseBenchmark {
- private:
-  int array_size;
-  int stride;
-  uint8_t *A;
-  int results;
+#include "single_stride.hh"
+#include "util.hh"
 
- public:
-  PrefetchStride(std::string name)
-      : BaseBenchmark(name),
-        array_size(100),
-        stride(0),
-        A(nullptr)
-  {}
+// This let the compiler know about the external assembly
+extern "C" {
+	uint64_t singlestride(uint64_t* A, uint64_t stride, uint64_t num_iterations) __attribute__((sysv_abi));
+}
 
-  ~PrefetchStride() {
-    if (A) {
-      delete A;
-    }
-  }
 
-  bool init(YAML::Node &bm_config) override {
-    std::cout << "Setup " << _name << std::endl;
-    if (bm_config["array_size"]) {
-      array_size = bm_config["array_size"].as<int>();
-    }
-    if (bm_config["stride"]) {
-      stride = bm_config["stride"].as<int>();
-    }
-	if (array_size == 0) {
+SingleStride::SingleStride(uint64_t _stride)
+	: Benchmark("Single Stride"),
+    A(nullptr),
+    array_size(0), stride(_stride),
+	num_iterations(0),
+	ref_val(0), res_val(0)
+{
+}
+
+SingleStride::~SingleStride()
+{
+	delete A;
+}
+
+bool SingleStride::init()
+{
+	array_size = stride*num_iterations;
+  	if (array_size == 0) {
 		std::cerr << "Array of size 0 makes no sense!" << std::endl;
 	}
+
 	if (stride == 0) {
 		std::cerr << "Stride of size 0 makes no sens!" << std::endl;
 	}
 
-    int v = 1;
-    A = new uint8_t[array_size];
-    for (int i = 0; i < array_size; i++) {
-      A[i] = v;
-    }
-    results = 0;
-    return true;
-  }
+	fatal_if(!isPowerOf2(array_size), "Must be power of two!\n");
 
-  void exec() override {
-	int v = 0;
-    for (int i = 0; i < array_size; i+=stride) {
-      v += A[i];
-    }
-	  results = v;
-  }
+	A = new uint64_t[array_size];
 
-  void repeat() override {
-    results = 0;
-  }
+	// Here we initialize the memory.
+    // We set the values to verify that the assembly works
+    uint64_t idx = 0;
+    for (int i = 0; i < num_iterations; i++) {
+		idx += stride;
+        A[idx] = i;
+		ref_val += i;
+	}
 
-  void report() override {
-    std::cout << "Array size: " << array_size << std::endl;
-    std::cout << "Result: " << results << std::endl;
-  }
-};
+	Benchmark::init();
+  return true;
+}
 
-REGISTER_BENCHMARK("prefetch-stride", PrefetchStride);
+void SingleStride::exec()
+{
+	// Call the assembly
+	res_val =  singlestride(A, stride, num_iterations);
+}
+
+bool SingleStride::check()
+{
+	// Call the assembly
+    std::cout << "Ref: " << ref_val << " Res: " << res_val << std::endl;
+	return (ref_val == res_val) ? true : false;
+}

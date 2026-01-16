@@ -1,0 +1,5 @@
+benchmark: "prefetch-stride"
+# array_size: 1048576 # 1MiB
+array_size: 264144 # 256KiB
+# array_size: 2048
+stride: 8
