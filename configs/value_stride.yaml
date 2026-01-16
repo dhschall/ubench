@@ -1,0 +1,5 @@
+benchmark: "value-stride"
+# array_size: 32768
+array_size: 2048
+array_step: 64
+stride: 0

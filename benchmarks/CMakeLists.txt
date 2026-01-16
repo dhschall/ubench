@@ -13,6 +13,8 @@ set(SOURCES
     btb/btb_stress_asm.cc
 
     cache/l1i_cache.cc
+
+    value/stride.cc
 )
 
 add_library(benchmarks STATIC ${SOURCES})
