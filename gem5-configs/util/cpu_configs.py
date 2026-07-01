@@ -321,7 +321,7 @@ class S_RdWrPort(RdWrPort):
         super().__init__()
         self.count = 8 * factor
 
-class S_IprPort(IprPort):
+class S_SystemPort(System_Unit):
     def __init__(self, factor):
         super().__init__()
         self.count = 1 * factor
@@ -340,7 +340,7 @@ class S_FUPool(FUPool):
             S_PredALU(factor=factor),
             S_WritePort(factor=factor),
             S_RdWrPort(factor=factor),
-            S_IprPort(factor=factor),
+            S_SystemPort(factor=factor),
         ]
 #-----------------------------------------------
 #-----------------------------------------------#
